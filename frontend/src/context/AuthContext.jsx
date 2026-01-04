@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authAPI } from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -16,6 +16,30 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
+
+  // Handle Google OAuth callback - check URL for token
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    const authError = urlParams.get('error');
+
+    if (authError) {
+      toast.error('Authentication failed. Please try again.');
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setLoading(false);
+      return;
+    }
+
+    if (urlToken) {
+      // Store token from Google OAuth callback
+      localStorage.setItem('token', urlToken);
+      setToken(urlToken);
+      toast.success('Login successful!');
+      // Clean up URL - remove token from URL for security
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -91,6 +115,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     isNoteMaker: user?.role === 'NOTEMAKER' || user?.role === 'ADMIN',
     isAdmin: user?.role === 'ADMIN',
+    hasActiveSubscription: user?.hasActiveSubscription || false,
     login,
     register,
     logout,

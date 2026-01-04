@@ -87,6 +87,12 @@ const noteSchema = new mongoose.Schema({
   },
   // Tags for better search
   tags: [String],
+  // AI extracted content from images
+  aiExtractedContent: {
+    summary: String,
+    keyPoints: [String],
+    extractedAt: Date
+  },
   // Soft delete
   isDeleted: {
     type: Boolean,

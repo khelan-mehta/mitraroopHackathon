@@ -16,6 +16,7 @@ import NoteMakerDashboard from './pages/notemaker/NoteMakerDashboard';
 import CreateNote from './pages/notemaker/CreateNote';
 import AdminPanel from './pages/admin/AdminPanel';
 import Wallet from './pages/wallet/Wallet';
+import Profile from './pages/profile/Profile';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requireNoteMaker = false, requireAdmin = false }) => {
@@ -88,6 +89,15 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <Wallet />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

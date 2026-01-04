@@ -37,6 +37,16 @@ export const notesAPI = {
   getMine: () => api.get('/notes/mine'),
   update: (id, data) => api.put(`/notes/${id}/update`, data),
   delete: (id) => api.delete(`/notes/${id}`),
+  // Image upload and AI extraction
+  uploadImages: (formData) => api.post('/notes/upload-images', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  uploadBase64: (data) => api.post('/notes/upload-base64', data),
+  extractText: (imageUrl) => api.post('/notes/extract-text', { imageUrl }),
+  analyzeImages: (imageUrls, subject) => api.post('/notes/analyze-images', { imageUrls, subject }),
+  createFromImages: (formData) => api.post('/notes/create-from-images', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
 // Marketplace

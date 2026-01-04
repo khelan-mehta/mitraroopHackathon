@@ -18,6 +18,7 @@ router.get('/me', protect, async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          avatar: user.avatar,
           role: user.role,
           bio: user.bio,
           education: user.education,
@@ -27,7 +28,8 @@ router.get('/me', protect, async (req, res) => {
           subscription: user.subscription,
           totalEarnings: user.totalEarnings,
           totalSpent: user.totalSpent,
-          hasActiveSubscription: user.hasActiveSubscription()
+          hasActiveSubscription: user.hasActiveSubscription(),
+          createdAt: user.createdAt
         }
       }
     });
@@ -45,20 +47,39 @@ router.get('/me', protect, async (req, res) => {
 // @access  Private
 router.put('/profile', protect, async (req, res) => {
   try {
-    const { name, bio, education, interests } = req.body;
+    const { name, bio, education, interests, subjects } = req.body;
 
     const user = await User.findById(req.user._id);
 
     if (name) user.name = name;
-    if (bio) user.bio = bio;
-    if (education) user.education = education;
+    if (bio !== undefined) user.bio = bio;
+    if (education !== undefined) user.education = education;
     if (interests) user.interests = interests;
+    if (subjects && user.role === 'NOTEMAKER') user.subjects = subjects;
 
     await user.save();
 
     res.json({
       success: true,
-      data: { user }
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          role: user.role,
+          bio: user.bio,
+          education: user.education,
+          interests: user.interests,
+          subjects: user.subjects,
+          walletBalance: user.walletBalance,
+          subscription: user.subscription,
+          totalEarnings: user.totalEarnings,
+          totalSpent: user.totalSpent,
+          hasActiveSubscription: user.hasActiveSubscription(),
+          createdAt: user.createdAt
+        }
+      }
     });
   } catch (error) {
     console.error('Update profile error:', error);

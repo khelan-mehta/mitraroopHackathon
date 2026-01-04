@@ -15,7 +15,15 @@ export const configurePassport = () => {
           // Check if user already exists
           let user = await User.findOne({ googleId: profile.id });
 
+          // Get avatar from Google profile
+          const avatar = profile.photos && profile.photos[0] ? profile.photos[0].value : null;
+
           if (user) {
+            // Update avatar if changed
+            if (avatar && user.avatar !== avatar) {
+              user.avatar = avatar;
+              await user.save();
+            }
             return done(null, user);
           }
 
@@ -23,8 +31,9 @@ export const configurePassport = () => {
           user = await User.findOne({ email: profile.emails[0].value });
 
           if (user) {
-            // Link Google account to existing user
+            // Link Google account to existing user and update avatar
             user.googleId = profile.id;
+            if (avatar) user.avatar = avatar;
             await user.save();
             return done(null, user);
           }
@@ -34,6 +43,7 @@ export const configurePassport = () => {
             googleId: profile.id,
             email: profile.emails[0].value,
             name: profile.displayName,
+            avatar: avatar,
             walletBalance: 0
           });
 

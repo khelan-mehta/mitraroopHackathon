@@ -69,10 +69,17 @@ const Navbar = () => {
                   <span className="font-medium">₹{user?.walletBalance || 0}</span>
                 </Link>
 
-                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-md">
-                  <FiUser />
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                >
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-6 h-6 rounded-full" />
+                  ) : (
+                    <FiUser />
+                  )}
                   <span className="text-sm font-medium">{user?.name}</span>
-                </div>
+                </Link>
 
                 <button
                   onClick={handleLogout}

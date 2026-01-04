@@ -179,3 +179,121 @@ export const generateFlashcards = async (content, numberOfCards = 10) => {
     throw new Error('Failed to generate flashcards');
   }
 };
+
+/**
+ * Extract text from an image using OpenAI Vision
+ * @param {string} imageUrl - URL of the image or base64 data URI
+ * @returns {Promise<string>} - Extracted text from the image
+ */
+export const extractTextFromImage = async (imageUrl) => {
+  try {
+    const openai = getOpenAI();
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an OCR expert. Extract all text from the provided image accurately. Preserve formatting like paragraphs, bullet points, and headings. If there are diagrams or figures, describe them briefly. Return only the extracted content.'
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Extract all the text content from this image. Include any handwritten notes, printed text, diagrams labels, and formulas. Preserve the structure and formatting.'
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageUrl
+              }
+            }
+          ]
+        }
+      ],
+      max_tokens: 4096,
+      temperature: 0.2
+    });
+
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error('Image Text Extraction Error:', error);
+    throw new Error('Failed to extract text from image');
+  }
+};
+
+/**
+ * Extract text from multiple images
+ * @param {string[]} imageUrls - Array of image URLs
+ * @returns {Promise<Array<{url: string, text: string}>>}
+ */
+export const extractTextFromMultipleImages = async (imageUrls) => {
+  try {
+    const results = await Promise.all(
+      imageUrls.map(async (url) => {
+        const text = await extractTextFromImage(url);
+        return { url, text };
+      })
+    );
+    return results;
+  } catch (error) {
+    console.error('Multiple Image Extraction Error:', error);
+    throw new Error('Failed to extract text from images');
+  }
+};
+
+/**
+ * Analyze note images and generate comprehensive content
+ * @param {string[]} imageUrls - Array of image URLs
+ * @param {string} subject - Subject of the notes
+ * @returns {Promise<{extractedText: string, summary: string, keyPoints: string[]}>}
+ */
+export const analyzeNoteImages = async (imageUrls, subject = 'General') => {
+  try {
+    const openai = getOpenAI();
+
+    // Build content array with all images
+    const imageContent = imageUrls.map(url => ({
+      type: 'image_url',
+      image_url: { url }
+    }));
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an expert educational content analyzer specializing in ${subject}. Analyze the provided note images and extract comprehensive information.`
+        },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Analyze these note images and provide:
+1. Complete extracted text (preserving structure)
+2. A concise summary of the content
+3. Key points and concepts covered
+
+Return as JSON: {
+  "extractedText": "full extracted text...",
+  "summary": "concise summary...",
+  "keyPoints": ["point 1", "point 2", ...]
+}`
+            },
+            ...imageContent
+          ]
+        }
+      ],
+      response_format: { type: 'json_object' },
+      max_tokens: 4096,
+      temperature: 0.3
+    });
+
+    return JSON.parse(response.choices[0].message.content);
+  } catch (error) {
+    console.error('Note Image Analysis Error:', error);
+    throw new Error('Failed to analyze note images');
+  }
+};

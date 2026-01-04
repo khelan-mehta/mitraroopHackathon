@@ -1,9 +1,29 @@
 import express from 'express';
+import multer from 'multer';
 import Note from '../models/Note.js';
 import { protect, isNoteMaker } from '../middleware/auth.js';
-import { checkNoteSimilarity } from '../services/aiService.js';
+import { checkNoteSimilarity, extractTextFromImage, analyzeNoteImages } from '../services/aiService.js';
+import { uploadFile, uploadBase64Image } from '../services/s3Service.js';
 
 const router = express.Router();
+
+// Configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 10 // Max 10 files at once
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept images only
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
+});
 
 // @route   POST /api/v1/notes/create
 // @desc    Create a new note
@@ -214,6 +234,209 @@ router.delete('/:id', protect, isNoteMaker, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error deleting note'
+    });
+  }
+});
+
+// @route   POST /api/v1/notes/upload-images
+// @desc    Upload images to S3
+// @access  Private (NoteMaker only)
+router.post('/upload-images', protect, isNoteMaker, upload.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No images provided'
+      });
+    }
+
+    const uploadPromises = req.files.map(file =>
+      uploadFile(file.buffer, file.originalname, file.mimetype)
+    );
+
+    const results = await Promise.all(uploadPromises);
+
+    res.json({
+      success: true,
+      data: {
+        images: results.map(r => ({
+          url: r.url,
+          key: r.key
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Upload images error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error uploading images'
+    });
+  }
+});
+
+// @route   POST /api/v1/notes/upload-base64
+// @desc    Upload base64 encoded image to S3
+// @access  Private (NoteMaker only)
+router.post('/upload-base64', protect, isNoteMaker, async (req, res) => {
+  try {
+    const { image, fileName } = req.body;
+
+    if (!image) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image data provided'
+      });
+    }
+
+    const result = await uploadBase64Image(image, fileName || 'image.jpg');
+
+    res.json({
+      success: true,
+      data: {
+        url: result.url,
+        key: result.key
+      }
+    });
+  } catch (error) {
+    console.error('Upload base64 error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error uploading image'
+    });
+  }
+});
+
+// @route   POST /api/v1/notes/extract-text
+// @desc    Extract text from uploaded image using AI
+// @access  Private (NoteMaker only)
+router.post('/extract-text', protect, isNoteMaker, async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+
+    if (!imageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Image URL is required'
+      });
+    }
+
+    const extractedText = await extractTextFromImage(imageUrl);
+
+    res.json({
+      success: true,
+      data: {
+        text: extractedText
+      }
+    });
+  } catch (error) {
+    console.error('Extract text error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error extracting text from image'
+    });
+  }
+});
+
+// @route   POST /api/v1/notes/analyze-images
+// @desc    Analyze multiple note images and generate comprehensive content
+// @access  Private (NoteMaker only)
+router.post('/analyze-images', protect, isNoteMaker, async (req, res) => {
+  try {
+    const { imageUrls, subject } = req.body;
+
+    if (!imageUrls || imageUrls.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Image URLs are required'
+      });
+    }
+
+    const analysis = await analyzeNoteImages(imageUrls, subject || 'General');
+
+    res.json({
+      success: true,
+      data: analysis
+    });
+  } catch (error) {
+    console.error('Analyze images error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error analyzing images'
+    });
+  }
+});
+
+// @route   POST /api/v1/notes/create-from-images
+// @desc    Create a note from uploaded images with AI text extraction
+// @access  Private (NoteMaker only)
+router.post('/create-from-images', protect, isNoteMaker, upload.array('images', 20), async (req, res) => {
+  try {
+    const { title, subject, description, price, tags } = req.body;
+
+    if (!title || !subject) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title and subject are required'
+      });
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'At least one image is required'
+      });
+    }
+
+    // Upload all images to S3
+    const uploadPromises = req.files.map(file =>
+      uploadFile(file.buffer, file.originalname, file.mimetype)
+    );
+    const uploadResults = await Promise.all(uploadPromises);
+    const imageUrls = uploadResults.map(r => r.url);
+
+    // Analyze images and extract text
+    const analysis = await analyzeNoteImages(imageUrls, subject);
+
+    // Create pages from the extracted content
+    const pages = imageUrls.map((url, idx) => ({
+      pageNumber: idx + 1,
+      content: analysis.extractedText || '',
+      images: [url]
+    }));
+
+    // Create the note
+    const note = await Note.create({
+      title,
+      subject,
+      description: description || analysis.summary || '',
+      pages,
+      price: price ? Number(price) : 0,
+      creator: req.user._id,
+      status: 'ACTIVE',
+      tags: tags ? (typeof tags === 'string' ? tags.split(',').map(t => t.trim()) : tags) : [],
+      aiExtractedContent: {
+        summary: analysis.summary,
+        keyPoints: analysis.keyPoints,
+        extractedAt: new Date()
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        note,
+        aiAnalysis: {
+          summary: analysis.summary,
+          keyPoints: analysis.keyPoints
+        }
+      },
+      message: 'Note created from images successfully'
+    });
+  } catch (error) {
+    console.error('Create from images error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error creating note from images'
     });
   }
 });
