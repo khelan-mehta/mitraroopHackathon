@@ -1,12 +1,25 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+let openai; // 🔑 lazy instance
+
+const getOpenAI = () => {
+  if (!openai) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is missing');
+    }
+
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+  }
+  return openai;
+};
 
 // Check similarity between new note and existing notes
 export const checkNoteSimilarity = async (noteContent, existingNotes) => {
   try {
+    const openai = getOpenAI();
+
     const existingContents = existingNotes.map(note => ({
       id: note._id,
       title: note.title,
@@ -44,8 +57,7 @@ Return as JSON: { "score": number, "reason": "string", "similarNoteIds": ["id1",
       temperature: 0.3
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
-    return result;
+    return JSON.parse(response.choices[0].message.content);
   } catch (error) {
     console.error('AI Similarity Check Error:', error);
     throw new Error('Failed to check note similarity');
@@ -55,6 +67,8 @@ Return as JSON: { "score": number, "reason": "string", "similarNoteIds": ["id1",
 // Generate summary of note pages
 export const generatePageSummary = async (pageContent) => {
   try {
+    const openai = getOpenAI();
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4-turbo-preview',
       messages: [
@@ -81,6 +95,8 @@ export const generatePageSummary = async (pageContent) => {
 // Generate brief summary of entire note
 export const generateBriefSummary = async (notePages) => {
   try {
+    const openai = getOpenAI();
+
     const fullContent = notePages.map(p => p.content).join('\n\n');
 
     const response = await openai.chat.completions.create({
@@ -109,6 +125,8 @@ export const generateBriefSummary = async (notePages) => {
 // Generate quiz from content
 export const generateQuiz = async (content, numberOfQuestions = 10) => {
   try {
+    const openai = getOpenAI();
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4-turbo-preview',
       messages: [
@@ -136,6 +154,8 @@ export const generateQuiz = async (content, numberOfQuestions = 10) => {
 // Generate flashcards
 export const generateFlashcards = async (content, numberOfCards = 10) => {
   try {
+    const openai = getOpenAI();
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4-turbo-preview',
       messages: [

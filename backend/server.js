@@ -1,14 +1,17 @@
-import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config(); // ✅ MUST be first
+
+import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import passport from 'passport';
+
 import connectDB from './config/database.js';
 import { configurePassport } from './config/passport.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
-// Import routes
+// Routes
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import notesRoutes from './routes/notes.js';
@@ -19,16 +22,13 @@ import reviewRoutes from './routes/review.js';
 import tutoringRoutes from './routes/tutoring.js';
 import adminRoutes from './routes/admin.js';
 
-// Load env variables
-dotenv.config();
-
-// Connect to database
+// Connect DB
 connectDB();
 
-// Initialize express
+// Init app
 const app = express();
 
-// Configure Passport
+// Passport
 configurePassport();
 
 // Middleware
@@ -45,7 +45,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 app.use(passport.initialize());
@@ -53,11 +53,7 @@ app.use(passport.session());
 
 // Routes
 app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Notes Marketplace API',
-    version: '1.0.0'
-  });
+  res.json({ success: true, message: 'Notes Marketplace API' });
 });
 
 app.use('/api/v1/auth', authRoutes);
@@ -70,14 +66,12 @@ app.use('/api/v1/review', reviewRoutes);
 app.use('/api/v1/tutoring', tutoringRoutes);
 app.use('/api/v1/admin', adminRoutes);
 
-// Error handling
+// Errors
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server
+// Start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-export default app;

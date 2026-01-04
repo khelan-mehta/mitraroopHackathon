@@ -132,29 +132,29 @@ const NoteViewer = () => {
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{note.note.title}</h1>
-            <p className="text-gray-600 mb-2">{note.note.subject}</p>
-            <p className="text-sm text-gray-500">{note.note.description}</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{note?.note?.title}</h1>
+            <p className="text-gray-600 mb-2">{note?.note?.subject}</p>
+            <p className="text-sm text-gray-500">{note?.note?.description}</p>
             <div className="mt-4 flex items-center gap-4">
               <div className="flex items-center gap-1">
                 <FiStar className="text-yellow-500 fill-current" />
-                <span>{note.note.rating.average.toFixed(1)} ({note.note.rating.count} reviews)</span>
+                <span>{note?.note?.rating.average.toFixed(1)} ({note?.note?.rating.count} reviews)</span>
               </div>
               <span className="text-gray-500">•</span>
-              <span>{note.note.purchases} purchases</span>
+              <span>{note?.note?.purchases} purchases</span>
               <span className="text-gray-500">•</span>
-              <span>{note.note.totalPages} pages</span>
+              <span>{note?.note?.totalPages} pages</span>
             </div>
           </div>
 
           <div className="text-right">
-            {note.note.isFree ? (
+            {note?.note?.isFree ? (
               <div className="text-2xl font-bold text-green-600">FREE</div>
             ) : (
-              <div className="text-2xl font-bold text-blue-600">₹{note.note.price}</div>
+              <div className="text-2xl font-bold text-blue-600">₹{note?.note?.price}</div>
             )}
 
-            {!hasPurchased && !note.note.isFree && (
+            {!hasPurchased && !note?.note?.isFree && (
               <button
                 onClick={handlePurchase}
                 disabled={purchasing}
@@ -178,7 +178,7 @@ const NoteViewer = () => {
         {/* Main Content */}
         <div className="lg:col-span-2">
           {/* Content Protection Warning */}
-          {!hasPurchased && !note.note.isFree && (
+          {!hasPurchased && !note?.note?.isFree && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
               <div className="flex items-start gap-2">
                 <FiLock className="text-yellow-600 mt-1" />
@@ -203,11 +203,11 @@ const NoteViewer = () => {
                 Previous
               </button>
               <span className="font-medium">
-                Page {currentPage + 1} of {displayPages.length}
+                Page {currentPage + 1} of {displayPages?.length}
               </span>
               <button
                 onClick={() => setCurrentPage(Math.min(displayPages.length - 1, currentPage + 1))}
-                disabled={currentPage === displayPages.length - 1}
+                disabled={currentPage === displayPages?.length - 1}
                 className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50"
               >
                 Next
@@ -222,16 +222,16 @@ const NoteViewer = () => {
               style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
               onCopy={(e) => e.preventDefault()}
             >
-              {displayPages[currentPage] && (
+              {displayPages ? displayPages[currentPage] && (
                 <div>
-                  <p className="whitespace-pre-wrap">{displayPages[currentPage].content}</p>
-                  {!hasPurchased && !note.note.isFree && (
+                  <p className="whitespace-pre-wrap">{displayPages[currentPage]?.content}</p>
+                  {!hasPurchased && !note?.note?.isFree && (
                     <div className="mt-4 p-4 bg-gray-100 text-center">
                       <p className="text-gray-600">Content preview limited. Purchase to view full page.</p>
                     </div>
                   )}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -314,11 +314,11 @@ const NoteViewer = () => {
           {/* Creator Info */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-bold mb-4">About the Creator</h3>
-            <p className="font-medium">{note.note.creator.name}</p>
-            {note.note.creator.bio && (
-              <p className="text-sm text-gray-600 mt-2">{note.note.creator.bio}</p>
+            <p className="font-medium">{note?.note?.creator?.name}</p>
+            {note?.note?.creator?.bio && (
+              <p className="text-sm text-gray-600 mt-2">{note?.note?.creator?.bio}</p>
             )}
-            {note.note.creator.subjects && (
+            {note?.note?.creator?.subjects && (
               <div className="mt-4">
                 <p className="text-sm font-medium mb-2">Subjects:</p>
                 <div className="flex flex-wrap gap-2">
