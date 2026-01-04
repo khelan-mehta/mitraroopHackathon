@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { walletAPI, purchaseAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
-import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiCreditCard } from 'react-icons/fi';
+import { FiDollarSign, FiTrendingUp, FiTrendingDown, FiCreditCard, FiX } from 'react-icons/fi';
 
 const Wallet = () => {
   const { user, refreshUser } = useAuth();
@@ -73,237 +73,261 @@ const Wallet = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-[#0a0a0a]">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-purple-500 border-t-transparent"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Wallet</h1>
-        <p className="mt-2 text-gray-600">Manage your balance and transactions</p>
-      </div>
-
-      {/* Wallet Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-lg shadow-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Current Balance</p>
-              <p className="text-4xl font-bold mt-2">₹{wallet?.balance || 0}</p>
-            </div>
-            <FiDollarSign className="text-5xl opacity-50" />
-          </div>
-          <button
-            onClick={() => setShowTopup(true)}
-            className="mt-4 px-4 py-2 bg-white text-green-600 rounded-md hover:bg-gray-100 w-full font-medium"
-          >
-            Top Up Wallet
-          </button>
+    <div className="min-h-screen bg-[#0a0a0a] text-white py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-white">Wallet</h1>
+          <p className="mt-2 text-gray-400">Manage your balance and transactions</p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Earnings</p>
-              <p className="text-3xl font-bold text-blue-600 mt-2">₹{wallet?.totalEarnings || 0}</p>
+        {/* Wallet Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-green-600 to-green-700 p-6 rounded-2xl shadow-xl shadow-green-500/20 border border-green-500/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-100">Current Balance</p>
+                <p className="text-4xl font-bold mt-2 text-white">₹{wallet?.balance || 0}</p>
+              </div>
+              <FiDollarSign className="text-5xl text-white/30" />
             </div>
-            <FiTrendingUp className="text-4xl text-blue-600" />
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Spent</p>
-              <p className="text-3xl font-bold text-red-600 mt-2">₹{wallet?.totalSpent || 0}</p>
-            </div>
-            <FiTrendingDown className="text-4xl text-red-600" />
-          </div>
-        </div>
-      </div>
-
-      {/* Subscription Section */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg shadow-lg p-6 mb-8 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-bold">PLUS Subscription</h3>
-            <p className="mt-2 opacity-90">
-              {user?.hasActiveSubscription
-                ? `Active until ${new Date(user.subscription.endDate).toLocaleDateString()}`
-                : 'Unlock AI features and premium content'}
-            </p>
-            {!user?.hasActiveSubscription && (
-              <p className="mt-2 text-lg font-semibold">₹{SUBSCRIPTION_PRICE}/month</p>
-            )}
-          </div>
-          {!user?.hasActiveSubscription && (
             <button
-              onClick={() => setShowSubscription(true)}
-              className="px-6 py-3 bg-white text-purple-600 rounded-md hover:bg-gray-100 font-medium"
+              onClick={() => setShowTopup(true)}
+              className="mt-4 px-4 py-2.5 bg-white text-green-700 rounded-xl hover:bg-green-50 w-full font-semibold transition-all shadow-lg"
             >
-              Subscribe Now
+              Top Up Wallet
             </button>
-          )}
-        </div>
-      </div>
-
-      {/* Transactions */}
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold">Transaction History</h2>
-        </div>
-
-        {transactions.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-gray-600">No transactions yet</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Balance
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {transactions.map((transaction) => (
-                  <tr key={transaction._id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(transaction.createdAt).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transaction.description}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded ${
-                          transaction.type === 'CREDIT'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {transaction.type}
-                      </span>
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                      transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.type === 'CREDIT' ? '+' : '-'}₹{transaction.amount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ₹{transaction.balanceAfter}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
 
-      {/* Top-up Modal */}
-      {showTopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Top Up Wallet</h2>
-            <form onSubmit={handleTopup}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
-                <input
-                  type="number"
-                  value={topupAmount}
-                  onChange={(e) => setTopupAmount(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500"
-                  placeholder="100"
-                  min="1"
-                  required
-                />
+          <div className="bg-[#18181b] p-6 rounded-2xl shadow-xl border border-[#27272a]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Total Earnings</p>
+                <p className="text-3xl font-bold text-blue-400 mt-2">₹{wallet?.totalEarnings || 0}</p>
               </div>
-              <div className="text-sm text-gray-600 mb-4">
-                <p>Quick amounts:</p>
-                <div className="flex gap-2 mt-2">
-                  {[100, 500, 1000, 2000].map((amount) => (
-                    <button
-                      key={amount}
-                      type="button"
-                      onClick={() => setTopupAmount(amount.toString())}
-                      className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50"
-                    >
-                      ₹{amount}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
-                >
-                  Top Up
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowTopup(false)}
-                  className="flex-1 border border-gray-300 py-2 rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Subscription Modal */}
-      {showSubscription && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Subscribe to PLUS</h2>
-            <div className="mb-6">
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
-                <p className="text-lg font-semibold text-purple-900">₹{SUBSCRIPTION_PRICE}/month</p>
-                <ul className="mt-4 space-y-2 text-sm text-purple-800">
-                  <li>✓ Access to AI-powered summaries</li>
-                  <li>✓ Automatic quiz generation</li>
-                  <li>✓ Flashcard creation</li>
-                  <li>✓ Priority support</li>
-                </ul>
-              </div>
-              <p className="text-sm text-gray-600">
-                Current Balance: <span className="font-bold">₹{wallet?.balance || 0}</span>
-              </p>
+              <FiTrendingUp className="text-4xl text-blue-400/50" />
             </div>
-            <div className="flex gap-3">
+          </div>
+
+          <div className="bg-[#18181b] p-6 rounded-2xl shadow-xl border border-[#27272a]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Total Spent</p>
+                <p className="text-3xl font-bold text-red-400 mt-2">₹{wallet?.totalSpent || 0}</p>
+              </div>
+              <FiTrendingDown className="text-4xl text-red-400/50" />
+            </div>
+          </div>
+        </div>
+
+        {/* Subscription Section */}
+        <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 rounded-2xl shadow-2xl shadow-purple-500/20 p-6 mb-8 text-white border border-purple-500/20">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-2xl font-bold">PLUS Subscription</h3>
+              <p className="mt-2 text-purple-100">
+                {user?.hasActiveSubscription
+                  ? `Active until ${new Date(user.subscription.endDate).toLocaleDateString()}`
+                  : 'Unlock AI features and premium content'}
+              </p>
+              {!user?.hasActiveSubscription && (
+                <p className="mt-2 text-xl font-bold">₹{SUBSCRIPTION_PRICE}/month</p>
+              )}
+            </div>
+            {!user?.hasActiveSubscription && (
               <button
-                onClick={handleSubscribe}
-                className="flex-1 bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700"
+                onClick={() => setShowSubscription(true)}
+                className="px-6 py-3 bg-white text-purple-700 rounded-xl hover:bg-purple-50 font-semibold transition-all shadow-lg whitespace-nowrap"
               >
                 Subscribe Now
               </button>
-              <button
-                onClick={() => setShowSubscription(false)}
-                className="flex-1 border border-gray-300 py-2 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-            </div>
+            )}
           </div>
         </div>
-      )}
+
+        {/* Transactions */}
+        <div className="bg-[#18181b] rounded-2xl shadow-xl border border-[#27272a]">
+          <div className="p-6 border-b border-[#27272a]">
+            <h2 className="text-2xl font-bold text-white">Transaction History</h2>
+          </div>
+
+          {transactions.length === 0 ? (
+            <div className="p-12 text-center">
+              <p className="text-gray-400">No transactions yet</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-[#27272a]">
+                <thead className="bg-[#27272a]/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                      Balance
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#27272a]">
+                  {transactions.map((transaction) => (
+                    <tr key={transaction._id} className="hover:bg-[#27272a]/30 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                        {new Date(transaction.createdAt).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
+                        {transaction.description}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-3 py-1 text-xs font-semibold rounded-lg ${
+                            transaction.type === 'CREDIT'
+                              ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                              : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                          }`}
+                        >
+                          {transaction.type}
+                        </span>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${
+                        transaction.type === 'CREDIT' ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {transaction.type === 'CREDIT' ? '+' : '-'}₹{transaction.amount}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
+                        ₹{transaction.balanceAfter}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Top-up Modal */}
+        {showTopup && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[#18181b] rounded-2xl p-8 max-w-md w-full border border-[#27272a] shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">Top Up Wallet</h2>
+                <button onClick={() => setShowTopup(false)} className="p-2 hover:bg-[#27272a] rounded-lg transition-colors">
+                  <FiX className="text-gray-400 text-xl" />
+                </button>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Amount (₹)</label>
+                  <input
+                    type="number"
+                    value={topupAmount}
+                    onChange={(e) => setTopupAmount(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#27272a] border border-[#3f3f46] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="100"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400 mb-3">Quick amounts:</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[100, 500, 1000, 2000].map((amount) => (
+                      <button
+                        key={amount}
+                        type="button"
+                        onClick={() => setTopupAmount(amount.toString())}
+                        className="px-3 py-2 bg-[#27272a] border border-[#3f3f46] text-gray-300 rounded-xl hover:bg-[#3f3f46] transition-colors font-medium"
+                      >
+                        ₹{amount}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={handleTopup}
+                    className="flex-1 bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 font-semibold transition-all shadow-lg shadow-purple-500/20"
+                  >
+                    Top Up
+                  </button>
+                  <button
+                    onClick={() => setShowTopup(false)}
+                    className="flex-1 border border-[#3f3f46] text-gray-300 py-3 rounded-xl hover:bg-[#27272a] font-semibold transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Subscription Modal */}
+        {showSubscription && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[#18181b] rounded-2xl p-8 max-w-md w-full border border-[#27272a] shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">Subscribe to PLUS</h2>
+                <button onClick={() => setShowSubscription(false)} className="p-2 hover:bg-[#27272a] rounded-lg transition-colors">
+                  <FiX className="text-gray-400 text-xl" />
+                </button>
+              </div>
+              <div className="space-y-6">
+                <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-5">
+                  <p className="text-2xl font-bold text-purple-400">₹{SUBSCRIPTION_PRICE}/month</p>
+                  <ul className="mt-4 space-y-2.5 text-sm text-gray-300">
+                    <li className="flex items-center gap-2">
+                      <span className="text-green-400">✓</span> Access to AI-powered summaries
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-green-400">✓</span> Automatic quiz generation
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-green-400">✓</span> Flashcard creation
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-green-400">✓</span> Priority support
+                    </li>
+                  </ul>
+                </div>
+                <div className="bg-[#27272a] rounded-xl p-4 border border-[#3f3f46]">
+                  <p className="text-sm text-gray-400">
+                    Current Balance: <span className="font-bold text-white">₹{wallet?.balance || 0}</span>
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSubscribe}
+                    className="flex-1 bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 font-semibold transition-all shadow-lg shadow-purple-500/20"
+                  >
+                    Subscribe Now
+                  </button>
+                  <button
+                    onClick={() => setShowSubscription(false)}
+                    className="flex-1 border border-[#3f3f46] text-gray-300 py-3 rounded-xl hover:bg-[#27272a] font-semibold transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

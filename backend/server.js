@@ -20,6 +20,7 @@ import walletRoutes from "./routes/wallet.js";
 import reviewRoutes from "./routes/review.js";
 import tutoringRoutes from "./routes/tutoring.js";
 import adminRoutes from "./routes/admin.js";
+import forumRoutes from "./routes/forum.js";
 
 connectDB().catch(console.error);
 
@@ -38,7 +39,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -59,6 +59,7 @@ app.use("/api/v1/wallet", walletRoutes);
 app.use("/api/v1/review", reviewRoutes);
 app.use("/api/v1/tutoring", tutoringRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/forum", forumRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

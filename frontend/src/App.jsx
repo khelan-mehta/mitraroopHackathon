@@ -1,25 +1,35 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Layout
-import Navbar from './components/Navbar';
+import Navbar from "./components/Navbar";
 
 // Pages
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import Dashboard from './pages/dashboard/Dashboard';
-import Marketplace from './pages/marketplace/Marketplace';
-import NoteViewer from './pages/note/NoteViewer';
-import NoteMakerDashboard from './pages/notemaker/NoteMakerDashboard';
-import CreateNote from './pages/notemaker/CreateNote';
-import AdminPanel from './pages/admin/AdminPanel';
-import Wallet from './pages/wallet/Wallet';
-import Profile from './pages/profile/Profile';
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import Dashboard from "./pages/dashboard/Dashboard";
+import Marketplace from "./pages/marketplace/Marketplace";
+import NoteViewer from "./pages/note/NoteViewer";
+import NoteMakerDashboard from "./pages/notemaker/NoteMakerDashboard";
+import CreateNote from "./pages/notemaker/CreateNote";
+import AdminPanel from "./pages/admin/AdminPanel";
+import Wallet from "./pages/wallet/Wallet";
+import Profile from "./pages/profile/Profile";
+import ForumsList, { ForumThreads, ThreadDetail } from "./pages/forums/ForumsList";
 
 // Protected Route Component
-const ProtectedRoute = ({ children, requireNoteMaker = false, requireAdmin = false }) => {
+const ProtectedRoute = ({
+  children,
+  requireNoteMaker = false,
+  requireAdmin = false,
+}) => {
   const { isAuthenticated, isNoteMaker, isAdmin, loading } = useAuth();
 
   if (loading) {
@@ -100,6 +110,13 @@ function AppContent() {
                 <Profile />
               </ProtectedRoute>
             }
+          />
+
+          <Route path="/community" element={<ForumsList />} />
+          <Route path="/community/forum/:forumId" element={<ForumThreads />} />
+          <Route
+            path="/community/thread/:threadId"
+            element={<ThreadDetail />}
           />
 
           <Route
